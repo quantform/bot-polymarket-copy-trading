@@ -16,7 +16,6 @@ export function watchOraclePrice(): Observable<OraclePriceEvent> {
         it.topic == 'crypto_prices_chainlink' &&
         it.payload.symbol == 'btc/usd'
     ),
-    map(it => it as UpdateMessage),
     dedupeByTimestamp(),
     map(({ payload }) => ({
       type: 'ev-oracle-price',
