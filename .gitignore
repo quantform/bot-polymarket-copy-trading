@@ -2,6 +2,7 @@
 
 # compiled output
 lib
+.jupiter
 
 # dependencies
 node_modules

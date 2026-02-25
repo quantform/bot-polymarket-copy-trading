@@ -1,8 +1,8 @@
-import { watchRealTimeData } from './watch-real-time-data';
+import { watchLiveData } from './watch-live-data';
 
 export function usePolymarket() {
   return {
     name: 'polymarket',
-    useRealTimeClient: watchRealTimeData
+    useRealTimeClient: watchLiveData
   };
 }
