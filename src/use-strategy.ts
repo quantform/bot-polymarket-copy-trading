@@ -1,15 +1,13 @@
 import { forkJoin, tap } from 'rxjs';
 import { watchOraclePrice } from './watch-oracle-price';
-import { useLogger } from '@quantform/core';
 import { watchLeaderExecution } from './watch-leader-execution';
+import { MarketAggregate } from './market-aggregate';
 
 export function useStrategy() {
-  const { info } = useLogger('strategy');
+  const aggregate = new MarketAggregate(0);
 
   return forkJoin([
-    watchOraclePrice().pipe(tap(it => info(`${it.timestamp} - ${it.price}`))),
-    watchLeaderExecution('0x1d0034134e339a309700Ff2D34e99FA2d48b0313').pipe(
-      tap(it => info(`${it.timestamp} - ${it.outcome} ${it.price}@${it.size}`))
-    )
+    watchOraclePrice().pipe(tap(it => aggregate.apply(it))),
+    watchLeaderExecution().pipe(tap(it => aggregate.apply(it)))
   ]);
 }
