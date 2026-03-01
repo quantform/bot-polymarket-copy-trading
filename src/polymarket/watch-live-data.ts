@@ -1,5 +1,5 @@
+import { useSocket } from '@quantform/core';
 import { defer, filter, map, switchMap } from 'rxjs';
-import { useSocket } from './use-socket';
 
 export interface Message<K extends string, T> {
   topic: string;
@@ -43,17 +43,13 @@ export type Messages = TradeMessage | UpdateMessage;
 export function watchLiveData(
   subscriptions: { topic: string; type: string; filters?: string }[]
 ) {
-  return defer(() =>
-    useSocket('wss://ws-live-data.polymarket.com').pipe(
-      switchMap(socket =>
-        socket.monitor().pipe(
-          filter(it => it == 'opened'),
-          switchMap(() =>
-            socket.send({ payload: { action: 'subscribe', subscriptions } })
-          ),
-          switchMap(() => socket.watch().pipe(map(it => it.payload as Messages)))
-        )
-      )
-    )
-  );
+  return defer(() => {
+    const { monitor, send, watch } = useSocket('wss://ws-live-data.polymarket.com');
+
+    return monitor().pipe(
+      filter(it => it == 'opened'),
+      switchMap(() => send({ payload: { action: 'subscribe', subscriptions } })),
+      switchMap(() => watch().pipe(map(it => it.payload as Messages)))
+    );
+  });
 }

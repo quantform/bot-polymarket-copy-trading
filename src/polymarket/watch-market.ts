@@ -1,6 +1,5 @@
-import { withMemo } from '@quantform/core';
-import { filter, map, switchMap } from 'rxjs';
-import { useSocket } from './use-socket';
+import { useSocket, withMemo } from '@quantform/core';
+import { defer, filter, map, switchMap } from 'rxjs';
 
 export type Message = {
   event_type: string;
@@ -24,21 +23,23 @@ export type BestBidAskEvent = {
 export type MarketEvent = LastTradePriceEvent | BestBidAskEvent;
 
 export const watchMarket = withMemo((assets: string[]) => {
-  return useSocket('wss://ws-subscriptions-clob.polymarket.com/ws/market').pipe(
-    switchMap(socket => {
-      return socket.monitor().pipe(
-        filter(it => it === 'opened'),
-        switchMap(() =>
-          socket.send({
-            payload: {
-              assets_ids: assets,
-              type: 'market',
-              custom_feature_enabled: true
-            }
-          })
-        ),
-        switchMap(() => socket.watch().pipe(map(it => it.payload as MarketEvent)))
-      );
-    })
-  );
+  return defer(() => {
+    const { monitor, send, watch } = useSocket(
+      'wss://ws-subscriptions-clob.polymarket.com/ws/market'
+    );
+
+    return monitor().pipe(
+      filter(it => it === 'opened'),
+      switchMap(() =>
+        send({
+          payload: {
+            assets_ids: assets,
+            type: 'market',
+            custom_feature_enabled: true
+          }
+        })
+      ),
+      switchMap(() => watch().pipe(map(it => it.payload as MarketEvent)))
+    );
+  });
 });
